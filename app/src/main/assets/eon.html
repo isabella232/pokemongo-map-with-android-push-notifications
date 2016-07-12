@@ -1,9 +1,9 @@
 <html>
 <head>
-    <script type="text/javascript" src="http://pubnub.github.io/eon/v/eon/0.0.11/eon.js"></script>
-    <link type="text/css" rel="stylesheet" href="http://pubnub.github.io/eon/v/eon/0.0.11/eon.css" />
-    <script type="text/javascript" src="inter.js" charset="utf-8"></script>
-
+    <script type="text/javascript" src="http://pubnub.github.io/eon/lib/eon-map.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script> <!--jquery from Google CDN -->
+    <link type="text/css" rel="stylesheet" href="http://pubnub.github.io/eon/lib/eon.css"/>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css"/>
     <style type="text/css">
         @import url(https://fonts.googleapis.com/css?family=Droid+Serif:700italic);
         body {
@@ -12,7 +12,7 @@
         font-family: 'Droid Serif', serif;
 
         }
-        #chart {
+        #map {
         position:absolute;
         top:0;
         bottom:65%;
@@ -23,7 +23,82 @@
     <meta charset="UTF-8">
 </head>
 <body>
+<!--Page-->
 <h1>EON.js on Android</h1>
-<div id="chart"></div>
+<div id="map"></div>
+<script>
+var xmlData = "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=sf-muni&r=1&t=1144953500233";
+//get data from xml link
+$(document).ready(function () {
+    $.get(xmlData, function (xml) {
+        $('vehicle', xml).each(function (index, vehicle) {
+            var long = $(vehicle).attr('lng');
+            var lat = $(vehicle).attr('lat');
+            $('#dl').append(
+                $(document.createElement('dt'))
+                    .append(
+                        $(document.createElement('p'))
+                            .text(lat + ' - ' + long)
+                    )
+            );
+        });
+
+    });
+});
+//embed
+var pub_key = 'pub-c-cfd86269-b02b-4004-97a6-92ca5f582fce';
+var sub_key = 'sub-c-e3dc294e-4568-11e6-bfbb-02ee2ddab7fe';
+var chan = 'pubTrans';
+  var pb = PUBNUB.init({
+  publish_key:  pub_key,
+  subscribe_key: sub_key
+});
+
+//var lat = document.querySelector("[lat=" + lat + "]");
+//var long = document.querySelector("[lon=" + lon + "]");
+if(window.DOMParser) {
+    parser = new DOMParser();
+    xmlDoc = parser.parseFromString(xmlData, "text/xml");
+}
+else {
+    //internet explore
+    xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+    xmlDoc.async = false;
+    xmlDoc.loadXML(xmlData);
+}
+
+//xmlDoc.getElementsByTagName("lat")[0].childNodes[0].nodeValue;
+
+var map = eon.map({
+  pubnub: pb,
+  id: 'map',
+  mb_token: 'pk.eyJ1IjoibGl6emllcGlrYSIsImEiOiJjaXFpZWk4d2cwNjd2ZnJtMXhiaTRmbXNpIn0.N2u0leIXpKQSC6Er0YkAjg',
+  mb_id: 'mapbox.streets',
+  subscribe_key: 'sub_key',
+  channel: chan,
+  rotate: true,
+  history: true,
+  message: function(data) {
+    map.setView(data[3].latLong, 13);
+    }
+});
+
+setInterval(function(){
+
+  PUBNUB.publish({
+    channel:  chan,
+    message: [
+        {"latlng":[31,-99]},
+        {"latlng":[32,-100]},
+        {"latlng":[33,-101]},
+        {"latlng":[35,-102]}
+      ]
+    <!--message: function (data) {-->
+        <!--map.setView(data[3].latLong, 13);-->
+    <!--}-->
+  });
+
+}, 1000);
+</script>
 </body>
 </html>
