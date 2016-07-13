@@ -1,8 +1,11 @@
 <html>
 <head>
-    <script type="text/javascript" src="http://pubnub.github.io/eon/lib/eon-map.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script> <!--jquery from Google CDN -->
-    <link type="text/css" rel="stylesheet" href="http://pubnub.github.io/eon/lib/eon.css"/>
+    <!--<script type="text/javascript" src="http://pubnub.github.io/eon/lib/eon-map.js"></script>-->
+    <!--<link type="text/css" rel="stylesheet" href="http://pubnub.github.io/eon/lib/eon.css" />-->
+    <script type="text/javascript" src="http://pubnub.github.io/eon/v/eon/0.0.10/eon.js"></script>
+    <link type="text/css" rel="stylesheet" href="http://pubnub.github.io/eon/v/eon/0.0.10/eon.css"/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <!--jquery from Google CDN -->
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css"/>
     <style type="text/css">
         @import url(https://fonts.googleapis.com/css?family=Droid+Serif:700italic);
@@ -23,70 +26,75 @@
     <meta charset="UTF-8">
 </head>
 <body>
-<!--Page-->
 <h1>EON.js on Android</h1>
-<div id="map"></div>
-<script>
-var lat;
-var long;
-var xmlData = "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=sf-muni&r=1&t=1144953500233";
-//get data from xml link
-$(document).ready(function () {
-    $.get(xmlData, function (xml) {
-        $('vehicle', xml).each(function (index, vehicle) {
-            long = $(vehicle).attr('lng');
-            lat = $(vehicle).attr('lat');
-            $('#dl').append(
-                $(document.createElement('dt'))
-                    .append(
-                        $(document.createElement('p'))
-                            .text(lat + ' - ' + long)
-                    )
-            );
-        });
-
-    });
-});
-//publish
+<div id='map'></div>
+<script type="text/javascript">
+var lat1, long1, lat2, long2, lat3, long3, lat5, long5, lat6, long6, lat7, long7;
+var chan = "pubTrans";
 var pub_key = 'pub-c-cfd86269-b02b-4004-97a6-92ca5f582fce';
 var sub_key = 'sub-c-e3dc294e-4568-11e6-bfbb-02ee2ddab7fe';
-var chan = 'pubTrans';
-var pb = PUBNUB.init({
-  publish_key:  pub_key,
-  subscribe_key: sub_key
-});
+var pubnub_lat = 37.783431;
+var pubnub_long = -122.399248;
+var polyline = L.polyline([], {color:'red', fillColor:'red'});
+var firstSitePart = "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=sf-muni&r=";
+var secondSitePart = "&t=1144953500233";
 
-setInterval(function() {
-    PUBNUB.publish({
+var totalStops = new Object();
+
+<!--var totalStops = {-->
+    <!--'data1' : [lat1, long1],-->
+    <!--'data2' : [lat2, long2],-->
+    <!--'data3' : [lat3, long3],-->
+    <!--'data5' : [lat5, long5],-->
+    <!--'data6' : [lat6, long6],-->
+    <!--'data7' : [lat7, long7],-->
+<!--}-->
+
+//get data from xml link
+$(document).ready(function () {
+    for(var i = 0; i < 3; i++) {
+        var busNum = i+1;
+        var siteToCheck = firstSitePart + busNum + secondSitePart;
+        console.log(siteToCheck);
+        $.get(siteToCheck, function (xml) {
+        for(var j = 0; j < 3; j++) {
+            $('vehicle', xml).each(function (index, vehicle) {
+                totalStops[j] = {'lat': $(vehicle).attr('lat'), 'lon': $(vehicle).attr('lon')};
+                console.log(j, totalStops[j]);
+            });
+            }
+        });
+    } //for
+        var pb= PUBNUB.init({
+            ssl: true,
+            publish_key: pub_key,
+            subscribe_key: sub_key
+        });
+
+        setInterval(function() {
+            pb.publish({
+                channel:  chan,
+                message: totalStops
+            });
+
+        }, 4000);
+    var map = eon.map({
+        id: 'map',
+        pubnub: pb,
+        mb_id: 'mapbox.streets',
+        mb_token: 'pk.eyJ1IjoibGl6emllcGlrYSIsImEiOiJjaXFpZWk4d2cwNjd2ZnJtMXhiaTRmbXNpIn0.N2u0leIXpKQSC6Er0YkAjg',
+        center: [pubnub_lat, pubnub_long],
         channel: chan,
-        message:
-        [
-            {"latlng": [lat, long]}
-        ]
+        message: function (data) {
+            console.log(data);
+        }
     });
-}, 1000);
-
-//var lat = document.querySelector("[lat=" + lat + "]");
-//var long = document.querySelector("[lon=" + lon + "]");
-if(window.DOMParser) {
-    parser = new DOMParser();
-    xmlDoc = parser.parseFromString(xmlData, "text/xml");
-}
-else {
-    //internet explore
-    xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
-    xmlDoc.async = false;
-    xmlDoc.loadXML(xmlData);
-}
-
-//xmlDoc.getElementsByTagName("lat")[0].childNodes[0].nodeValue;
-
-eon.map({
-  id: 'map',
-  mb_token: 'pk.eyJ1IjoibGl6emllcGlrYSIsImEiOiJjaXFpZWk4d2cwNjd2ZnJtMXhiaTRmbXNpIn0.N2u0leIXpKQSC6Er0YkAjg',
-  mb_id: 'mapbox.streets',
-  channel: chan
 });
+
+
+
+
+
 </script>
 </body>
 </html>
