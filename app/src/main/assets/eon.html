@@ -41,42 +41,63 @@ var lat1, long1, lat2, long2, lat3, long3;
 var totalStops = new Object();
 var latArr = [];
 var longArr = [];
+var sitesToCheck = [];
+var siteToCheck1, siteToCheck2, siteToCheck3;
+
+var pb= PUBNUB.init({
+    //ssl: true,
+    publish_key: pub_key,
+    subscribe_key: sub_key
+});
 
 //get data from xml link
 $(document).ready(function () {
     for(var i = 0; i < 3; i++) {
         var busNum = i+1;
-        var siteToCheck = firstSitePart + busNum + secondSitePart;
-        console.log(siteToCheck);
-        var pb= PUBNUB.init({
-                    ssl: true,
-                    publish_key: pub_key,
-                    subscribe_key: sub_key
-        });
+        if(busNum == 1) {
+            siteToCheck1 = firstSitePart + busNum + secondSitePart;
+            console.log(siteToCheck1);
+            sitesToCheck.push(siteToCheck1);
+        }
+        else if (busNum == 2) {
+            siteToCheck2 = firstSitePart + busNum + secondSitePart;
+            console.log(siteToCheck2);
+            sitesToCheck.push(siteToCheck2);
+        }
+        else if (busNum == 3) {
+            siteToCheck3 = firstSitePart + busNum + secondSitePart;
+            console.log(siteToCheck3);
+            sitesToCheck.push(siteToCheck3);
+        }
 
-        $.get(siteToCheck, function (xml) {
-                $('vehicle', xml).each(function (siteToCheck, vehicle) {
+
+        console.log(sitesToCheck);
+         $.each(sitesToCheck, function (index1, value ) {
+            $.get(value, function (xml) {
+                console.log(value);
+                $('vehicle', xml).each(function (index, vehicle) {
                     totalStops[i] = {'lat': $(vehicle).attr('lat'), 'lon': $(vehicle).attr('lon')};
-                    latArr[i] = {'lat': $(vehicle).attr('lat')};
-                    longArr[i] = {'lon': $(vehicle).attr('lon')};
+                    latArr[index1] = {'lat': $(vehicle).attr('lat')};
+                    longArr[index1] = {'lon': $(vehicle).attr('lon')};
                     //console.log(i, totalStops[i].lat, totalStops[i].lon);
-                    console.log(i, latArr[i].lat);
-                    console.log(i, longArr[i].lon);
-                });
-
+                    console.log(index1, latArr[index1].lat);
+                    console.log(index1, longArr[index1].lon);
+                }); //each
 
                 setInterval(function() {
                     pb.publish({
                         channel:  chan,
                         message: [
-                            //{"latlng":[totalStops.lat,totalStops.lon]}
-                            {"latlng": [latArr[i].lat, longArr[i].lon ] }
+                            {"latlng": [latArr[0].lat, longArr[0].lon ] },
+                            {"latlng": [latArr[1].lat, longArr[1].lon ] },
+                            {"latlng": [latArr[2].lat, longArr[2].lon ] }
                         ]
                     });
 
-                }, 4000);
-        });
-    } //for
+                }, 1000);
+            });
+         });
+    }
     var map = eon.map({
         id: 'map',
         pubnub: pb,
@@ -86,9 +107,9 @@ $(document).ready(function () {
         channel: chan,
         rotate: true,
         message: function (data) {
-            for(var j = 0; j < 3; j++) {
-                map.setView(data[0].latlng, 13);
-            }
+            //for(var i = 0; i < 3; i++) {
+            map.setView(data[1].latlng, 13); //13 = zoom, set location
+            //}
         }
     });
 });
