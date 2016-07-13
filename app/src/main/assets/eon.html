@@ -29,26 +29,18 @@
 <h1>EON.js on Android</h1>
 <div id='map'></div>
 <script type="text/javascript">
-var lat1, long1, lat2, long2, lat3, long3, lat5, long5, lat6, long6, lat7, long7;
 var chan = "pubTrans";
 var pub_key = 'pub-c-cfd86269-b02b-4004-97a6-92ca5f582fce';
 var sub_key = 'sub-c-e3dc294e-4568-11e6-bfbb-02ee2ddab7fe';
-var pubnub_lat = 37.783431;
+var pubnub_lat = 37.783431; //ty GoogleMaps
 var pubnub_long = -122.399248;
 var polyline = L.polyline([], {color:'red', fillColor:'red'});
 var firstSitePart = "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=sf-muni&r=";
 var secondSitePart = "&t=1144953500233";
-
+var lat1, long1, lat2, long2, lat3, long3;
 var totalStops = new Object();
-
-<!--var totalStops = {-->
-    <!--'data1' : [lat1, long1],-->
-    <!--'data2' : [lat2, long2],-->
-    <!--'data3' : [lat3, long3],-->
-    <!--'data5' : [lat5, long5],-->
-    <!--'data6' : [lat6, long6],-->
-    <!--'data7' : [lat7, long7],-->
-<!--}-->
+var latArr = [];
+var longArr = [];
 
 //get data from xml link
 $(document).ready(function () {
@@ -56,28 +48,35 @@ $(document).ready(function () {
         var busNum = i+1;
         var siteToCheck = firstSitePart + busNum + secondSitePart;
         console.log(siteToCheck);
+        var pb= PUBNUB.init({
+                    ssl: true,
+                    publish_key: pub_key,
+                    subscribe_key: sub_key
+        });
+
         $.get(siteToCheck, function (xml) {
-        for(var j = 0; j < 3; j++) {
-            $('vehicle', xml).each(function (index, vehicle) {
-                totalStops[j] = {'lat': $(vehicle).attr('lat'), 'lon': $(vehicle).attr('lon')};
-                console.log(j, totalStops[j]);
-            });
-            }
+                $('vehicle', xml).each(function (siteToCheck, vehicle) {
+                    totalStops[i] = {'lat': $(vehicle).attr('lat'), 'lon': $(vehicle).attr('lon')};
+                    latArr[i] = {'lat': $(vehicle).attr('lat')};
+                    longArr[i] = {'lon': $(vehicle).attr('lon')};
+                    //console.log(i, totalStops[i].lat, totalStops[i].lon);
+                    console.log(i, latArr[i].lat);
+                    console.log(i, longArr[i].lon);
+                });
+
+
+                setInterval(function() {
+                    pb.publish({
+                        channel:  chan,
+                        message: [
+                            //{"latlng":[totalStops.lat,totalStops.lon]}
+                            {"latlng": [latArr[i].lat, longArr[i].lon ] }
+                        ]
+                    });
+
+                }, 4000);
         });
     } //for
-        var pb= PUBNUB.init({
-            ssl: true,
-            publish_key: pub_key,
-            subscribe_key: sub_key
-        });
-
-        setInterval(function() {
-            pb.publish({
-                channel:  chan,
-                message: totalStops
-            });
-
-        }, 4000);
     var map = eon.map({
         id: 'map',
         pubnub: pb,
@@ -85,15 +84,14 @@ $(document).ready(function () {
         mb_token: 'pk.eyJ1IjoibGl6emllcGlrYSIsImEiOiJjaXFpZWk4d2cwNjd2ZnJtMXhiaTRmbXNpIn0.N2u0leIXpKQSC6Er0YkAjg',
         center: [pubnub_lat, pubnub_long],
         channel: chan,
+        rotate: true,
         message: function (data) {
-            console.log(data);
+            for(var j = 0; j < 3; j++) {
+                map.setView(data[0].latlng, 13);
+            }
         }
     });
 });
-
-
-
-
 
 </script>
 </body>
