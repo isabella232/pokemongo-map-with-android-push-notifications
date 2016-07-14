@@ -18,8 +18,8 @@
         #map {
         position:absolute;
         top:0;
-        bottom:65%;
-        width:90%;
+        bottom:55%;
+        width:70%;
         }
     </style>
     <title>WKWebView</title>
@@ -29,6 +29,13 @@
 <h1>EON.js on Android</h1>
 <div id='map'></div>
 <script type="text/javascript">
+function make2DArray(rows) {
+    var arr = [];
+    for(var y = 0; y < rows; y++) {
+        arr[y] = [];
+    }
+    return arr;
+}
 var chan = "pubTrans";
 var pub_key = 'pub-c-cfd86269-b02b-4004-97a6-92ca5f582fce';
 var sub_key = 'sub-c-e3dc294e-4568-11e6-bfbb-02ee2ddab7fe';
@@ -39,8 +46,8 @@ var firstSitePart = "http://webservices.nextbus.com/service/publicXMLFeed?comman
 var secondSitePart = "&t=1144953500233";
 var lat1, long1, lat2, long2, lat3, long3;
 var totalStops = new Object();
-var latArr = [];
-var longArr = [];
+var latArr = make2DArray(3);
+var longArr = make2DArray(3);
 var sitesToCheck = [];
 var siteToCheck1, siteToCheck2, siteToCheck3;
 
@@ -77,23 +84,23 @@ $(document).ready(function () {
                 console.log(value);
                 $('vehicle', xml).each(function (index, vehicle) {
                     totalStops[i] = {'lat': $(vehicle).attr('lat'), 'lon': $(vehicle).attr('lon')};
-                    latArr[index1] = {'lat': $(vehicle).attr('lat')};
-                    longArr[index1] = {'lon': $(vehicle).attr('lon')};
+                    latArr[index1][index] = {'lat': $(vehicle).attr('lat')};
+                    longArr[index1][index] = {'lon': $(vehicle).attr('lon')};
                     //console.log(i, totalStops[i].lat, totalStops[i].lon);
-                    console.log(index1, latArr[index1].lat);
-                    console.log(index1, longArr[index1].lon);
+                    console.log(index1, latArr[index1][0].lat);
+                    console.log(index1, longArr[index1][0].lon);
                 }); //each
-
                 setInterval(function() {
-                    pb.publish({
-                        channel:  chan,
-                        message: [
-                            {"latlng": [latArr[0].lat, longArr[0].lon ] },
-                            {"latlng": [latArr[1].lat, longArr[1].lon ] },
-                            {"latlng": [latArr[2].lat, longArr[2].lon ] }
-                        ]
-                    });
-
+                    for(var i = 0; i < latArr.length; i++) {
+                        pb.publish({
+                            channel:  chan,
+                            message: [
+                                {"latlng": [latArr[0][i].lat, longArr[0][i].lon ] }, //0 = Muni 1-California
+                                {"latlng": [latArr[1][i].lat, longArr[1][i].lon ] }, //1 = Muni 2-
+                                {"latlng": [latArr[2][i].lat, longArr[2][i].lon ] } //2 = Muni 3-
+                            ]
+                        });
+                    }
                 }, 1000);
             });
          });

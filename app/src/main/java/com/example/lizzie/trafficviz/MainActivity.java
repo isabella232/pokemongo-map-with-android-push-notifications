@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 import com.pubnub.api.*;
 import org.json.*;
@@ -24,7 +25,8 @@ public class MainActivity extends Activity {
         WebSettings webSetting = webView.getSettings();
         webSetting.setBuiltInZoomControls(true);
         webSetting.setJavaScriptEnabled(true);
-
+        webSetting.setDomStorageEnabled(true); //stackoverflow
+        //webView.addJavascriptInterface(new WebAppInterface(this));
         webView.setWebViewClient(new WebViewClient());
         webView.loadUrl("file:///android_asset/eon.html");
     }
@@ -36,3 +38,5 @@ public class MainActivity extends Activity {
         }
     }
 }
+
+
