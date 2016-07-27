@@ -1,41 +1,41 @@
 package com.example.lizzie.trafficviz;
 
 import android.app.Activity;
-import android.location.LocationManager;
+import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
-import android.view.animation.OvershootInterpolator;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.webkit.WebResourceResponse;
-import android.net.Uri;
-import android.location.Location;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.android.gms.iid.InstanceID;
 import com.google.android.gms.location.LocationServices;
-import com.pubnub.api.*;
-
-//pokemon, inject JS into localhost page
-import android.util.Base64;
-import org.json.*;
+import com.pubnub.api.Pubnub;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.*;
-import java.lang.String;
+
+//pokemon, inject JS into localhost page
 
 public class MainActivity extends Activity implements ConnectionCallbacks, OnConnectionFailedListener {
-
-    Pubnub pn = new Pubnub("pub-c-cfd86269-b02b-4004-97a6-92ca5f582fce", "sub-c-e3dc294e-4568-11e6-bfbb-02ee2ddab7fe");
+    String serverApiKey = "AIzaSyBJ9ZBdNbfZ5n2PGySR_TOjlLwXTgRrxno";
+    //PubNub lat-long: 37.783556, -122.399234
+    String senderID = "209687934533";
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
     TextView tvLatLong;
+    private static final String TAG = "RegIntentService";
 
     private WebView webView;
 
@@ -62,7 +62,7 @@ public class MainActivity extends Activity implements ConnectionCallbacks, OnCon
         webView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
         //webView.addJavascriptInterface(new WebAppInterface(this));
         webView.setWebViewClient(new lizzieBrowser());
-        String idkMan = Uri.parse("http://5966f73a.ngrok.io").toString(); //url will change each time ngrok changes, runs
+        String idkMan = Uri.parse("http://c7581073.ngrok.io").toString(); //url will change each time ngrok changes, runs
         webView.loadUrl(idkMan);
 
         tvLatLong = (TextView) findViewById(R.id.tvLatLong);
@@ -76,6 +76,14 @@ public class MainActivity extends Activity implements ConnectionCallbacks, OnCon
         } else {
             Toast.makeText(this, "not connected...", Toast.LENGTH_SHORT).show();
         }
+
+        InstanceID instanceID = InstanceID.getInstance(this);
+        try {
+            String token = instanceID.getToken(getString(R.string.gcm_defaultSenderId),
+                    GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+        } catch(IOException e){
+            Toast.makeText(this, "error in instanceID", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -85,10 +93,14 @@ public class MainActivity extends Activity implements ConnectionCallbacks, OnCon
 
     @Override
     public void onConnected(Bundle arg0) {
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        if (mLastLocation != null) {
-            tvLatLong.setText("Latitude: " + String.valueOf(mLastLocation.getLatitude()) + "Longitude: " + String.valueOf(mLastLocation.getLongitude()));
+        try {
+            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            if (mLastLocation != null) {
+                tvLatLong.setText("Latitude: " + String.valueOf(mLastLocation.getLatitude()) + "Longitude: " + String.valueOf(mLastLocation.getLongitude()));
 
+            }
+        } catch(SecurityException e) {
+            Toast.makeText(this, "error", Toast.LENGTH_SHORT).show();
         }
         //Toast.makeText(this, "Latitude: "+ String.valueOf(mLastLocation.getLatitude()) + "Longitude: " + String.valueOf(mLastLocation.getLongitude()), Toast.LENGTH_SHORT).show();
     }
@@ -97,7 +109,6 @@ public class MainActivity extends Activity implements ConnectionCallbacks, OnCon
     public void onConnectionSuspended(int arg0) {
         Toast.makeText(this, "Connection suspended", Toast.LENGTH_SHORT).show();
     }
-
 
     protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -147,7 +158,11 @@ public class MainActivity extends Activity implements ConnectionCallbacks, OnCon
         }
 
     }
+
+
 }
+
+
 
 
 
