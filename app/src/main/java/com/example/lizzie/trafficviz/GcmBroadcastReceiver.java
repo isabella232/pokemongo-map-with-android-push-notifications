@@ -36,7 +36,6 @@ import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListe
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 import com.google.android.gms.location.LocationServices;
-import com.pubnub.api.Pubnub;
 
 import android.content.ComponentName;
 import android.support.v4.app.NotificationCompat;

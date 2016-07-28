@@ -20,20 +20,26 @@ import android.widget.Toast;
 
 import java.lang.*;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.gcm.GoogleCloudMessaging;
-import com.google.android.gms.common.GoogleApiAvailability;
-import com.pubnub.api.Callback;
-import com.pubnub.api.PnGcmMessage;
-import com.pubnub.api.PnMessage;
-import com.pubnub.api.Pubnub;
-import com.pubnub.api.PubnubError;
-import com.pubnub.api.PubnubException;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.security.Policy;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
+import com.pubnub.api.PNConfiguration;
+import com.pubnub.api.PubNub;
+import com.pubnub.api.PubNubException;
+import com.pubnub.api.callbacks.PNCallback;
+import com.pubnub.api.models.consumer.PNPublishResult;
+import com.pubnub.api.models.consumer.PNStatus;
+import com.pubnub.api.models.consumer.push.PNPushAddChannelResult;
+import com.pubnub.api.models.consumer.push.PNPushRemoveChannelResult;
 
 
 /**
@@ -69,7 +75,7 @@ public class GcmIntentService extends IntentService {
         try {
             token = instanceID.getToken(getString(R.string.gcm_defaultSenderId),
                     GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
-        } catch(Exception e) {
+        } catch (Exception e) {
             System.out.println(e);
         }
         Bundle extras = intent.getExtras();
@@ -129,8 +135,7 @@ public class GcmIntentService extends IntentService {
         if (result != ConnectionResult.SUCCESS) {
             if (googleAPI.isUserResolvableError(result)) {
                 googleAPI.getErrorDialog((Activity) context, result, PLAY_SERVICES_RESOLUTION_REQUEST).show();
-            }
-            else {
+            } else {
                 Log.e(TAG, "device not supported"); //finish() ?
             }
             return false;
@@ -158,7 +163,7 @@ public class GcmIntentService extends IntentService {
     }
 
     private void registerInBackground() {
-        AsyncTask<Integer, Void, String> opTask = new AsyncTask<Integer, Void, String>(){
+        AsyncTask<Integer, Void, String> opTask = new AsyncTask<Integer, Void, String>() {
             @Override
             protected String doInBackground(Integer... params) {
                 String msg;
@@ -185,13 +190,18 @@ public class GcmIntentService extends IntentService {
     }
 
     //PubNub instance
-    private final Pubnub pb = new Pubnub("pub-c-cfd86269-b02b-4004-97a6-92ca5f582fce", "sub-c-e3dc294e-4568-11e6-bfbb-02ee2ddab7fe");
+    PNConfiguration pnConfiguration = new PNConfiguration()
+            .setSubscribeKey("sub-c-e3dc294e-4568-11e6-bfbb-02ee2ddab7fe")
+            .setPublishKey("pub-c-cfd86269-b02b-4004-97a6-92ca5f582fce");
+    private final PubNub pb = new PubNub(pnConfiguration);
 
     private void sendRegistrationId(String regID) {
-        pb.enablePushNotificationsOnChannel(
-                CHANNEL,
-                regID
-        );
+        pb.addPushNotificationsOnChannels().channels(Arrays.asList(CHANNEL)).deviceId(regID).async(new PNCallback<PNPushAddChannelResult>() {
+            @Override
+            public void onResponse(PNPushAddChannelResult result, PNStatus status) {
+                // HANDLE ME HERE.
+            }
+        });
     }
 
     private void storeRegistrationId(Context context, String regId) throws Exception {
@@ -202,54 +212,15 @@ public class GcmIntentService extends IntentService {
         editor.apply();
     }
 
-    public void sendNotification() {
-        PnGcmMessage gcmMessage = new PnGcmMessage();
-        JSONObject jso = new JSONObject();
-        try {
-            jso.put("GCMSays", "hi");
-        } catch (JSONException e) {
-        }
-        gcmMessage.setData(jso);
-
-        // Create PnMessage
-        Callback publishCallback = new Callback() { 
-            public void successCallback(String channel, Object response) { 
-                System.out.println(response); 
-            }  
-
-            public void errorCallback(String channel, PubnubError error) { 
-                System.out.println(error);
-            } 
-        };
-
-         PnMessage message = new PnMessage(pb, CHANNEL, publishCallback , gcmMessage);
-
-
-          //message.put("b");
-
-          try {
-                 message.publish();
-             } catch (PubnubException e) {
-            Toast.makeText(this, "PubNubException: " + e, Toast.LENGTH_SHORT).show();
-        } 
-
+    public void sendNotification2() throws PubNubException {
+        pb.publish()
+                .message("hi")
+                .channel("hi2")
+                .sync();
     }
 
-    public static Callback callback = new Callback() {
-        String TAG = "hello, world";
-        @Override
-        public void successCallback(String channel, Object message) {
-            Log.i(TAG, "Success on Channel " + channel + " : " + message);
-        }
-
-        @Override
-        public void errorCallback(String channel, PubnubError error) {
-            Log.i(TAG, "Error On Channel " + channel + " : " + error);
-        }
-    };
-
-    private void unregister()  {
-        AsyncTask<String, Void, Object> opTask = new AsyncTask<String, Void, Object>(){
+    private void unregister() {
+        AsyncTask<String, Void, Object> opTask = new AsyncTask<String, Void, Object>() {
             @Override
             protected Object doInBackground(String... params) {
                 try {
@@ -264,7 +235,15 @@ public class GcmIntentService extends IntentService {
                     removeRegistrationId(context);
 
                     // Disable Push Notification
-                    pb.disablePushNotificationsOnChannel(CHANNEL, regId);
+                    pb.removePushNotificationsFromChannels()
+                            .channels(Arrays.asList(CHANNEL))
+                            .deviceId(regId)
+                            .async(new PNCallback<PNPushRemoveChannelResult>() {
+                                @Override
+                                public void onResponse(PNPushRemoveChannelResult result, PNStatus status) {
+                                    // HANDLE RESULT HERE
+                                }
+                            });
 
                 } catch (Exception e) {
                 }
