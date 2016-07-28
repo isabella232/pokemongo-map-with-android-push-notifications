@@ -1,5 +1,6 @@
 package com.example.lizzie.trafficviz;
 
+import android.app.Activity;
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -16,19 +17,22 @@ import android.util.Log;
 
 import android.os.AsyncTask;
 import android.widget.Toast;
-import android.support.v4.media.session.MediaControllerCompat.Callback;
 
 import java.lang.*;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.pubnub.api.Callback;
+import com.pubnub.api.PnGcmMessage;
 import com.pubnub.api.PnMessage;
 import com.pubnub.api.Pubnub;
 import com.pubnub.api.PubnubError;
 import com.pubnub.api.PubnubException;
 
 import java.io.IOException;
+import java.security.Policy;
+
 import com.google.android.gms.iid.InstanceID;
 
 
@@ -38,8 +42,13 @@ import com.google.android.gms.iid.InstanceID;
 
 public class GcmIntentService extends IntentService {
 
-    String regId;
+    private class asyncTaskClass extends GcmIntentService {
+
+    }
+
+    String regId = "pikachu";
     String SENDER_ID = "209687934533";
+    String maybe_sender_id = "AIzaSyCGbXUSDAyPeow9QR7JJHNGvp6frpWoy3M";
     String TAG = "hello, world";
     GoogleCloudMessaging gcm;
 
@@ -55,6 +64,14 @@ public class GcmIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        InstanceID instanceID = InstanceID.getInstance(this);
+        String token;
+        try {
+            token = instanceID.getToken(getString(R.string.gcm_defaultSenderId),
+                    GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+        } catch(Exception e) {
+            System.out.println(e);
+        }
         Bundle extras = intent.getExtras();
         gcm = GoogleCloudMessaging.getInstance(this);
         String messageType = gcm.getMessageType(intent);
@@ -84,6 +101,8 @@ public class GcmIntentService extends IntentService {
         mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
 
+//which device should receive notifications?
+
     private void register() {
         if (checkPlayServices()) {
             gcm = GoogleCloudMessaging.getInstance(this);
@@ -104,30 +123,18 @@ public class GcmIntentService extends IntentService {
         }
     }
 
-    //    private boolean checkPlayServices() {
-//        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
-//        if (resultCode != ConnectionResult.SUCCESS) {
-//            if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-//                GooglePlayServicesUtil.getErrorDialog(resultCode, android.app.Activity, PLAY_SERVICES_RESOLUTION_REQUEST).show(); //result, this
-//            } else {
-//                Log.e(TAG, "This device is not supported.");
-//                finish();
-//            }
-//            return false;
-//        }
-//        return true;
-//    }
     private boolean checkPlayServices() {
         GoogleApiAvailability googleAPI = GoogleApiAvailability.getInstance();
         int result = googleAPI.isGooglePlayServicesAvailable(this);
         if (result != ConnectionResult.SUCCESS) {
             if (googleAPI.isUserResolvableError(result)) {
-                googleAPI.getErrorDialog(this, result,
-                        PLAY_SERVICES_RESOLUTION_REQUEST).show();
+                googleAPI.getErrorDialog((Activity) context, result, PLAY_SERVICES_RESOLUTION_REQUEST).show();
+            }
+            else {
+                Log.e(TAG, "device not supported"); //finish() ?
             }
             return false;
         }
-
         return true;
     }
 
@@ -145,16 +152,15 @@ public class GcmIntentService extends IntentService {
     public String getRegistrationToken() throws IOException {
 
         InstanceID instanceID = InstanceID.getInstance(this);
-        String token = instanceID.getToken(PNConfiguration.project_sender_id,
-                GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+        String token = instanceID.getToken(GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
 
         return token;
     }
 
     private void registerInBackground() {
-        new AsyncTask() {
+        AsyncTask<Integer, Void, String> opTask = new AsyncTask<Integer, Void, String>(){
             @Override
-            protected String doInBackground(Object[] params) {
+            protected String doInBackground(Integer... params) {
                 String msg;
                 try {
                     if (gcm == null) {
@@ -173,8 +179,9 @@ public class GcmIntentService extends IntentService {
                     Log.e(TAG, msg);
                 } //catch
                 return msg;
-            } //String
-        }.execute(null, null, null); //async task
+            }
+        };
+        opTask.execute(null, null, null); //async task
     }
 
     //PubNub instance
@@ -205,15 +212,18 @@ public class GcmIntentService extends IntentService {
         gcmMessage.setData(jso);
 
         // Create PnMessage
-         PnMessage message = new PnMessage(pb, CHANNEL, new Callback() { 
-            @Override 
+        Callback publishCallback = new Callback() { 
             public void successCallback(String channel, Object response) { 
                 System.out.println(response); 
             }  
-            @Override 
+
             public void errorCallback(String channel, PubnubError error) { 
                 System.out.println(error);
-                     } }, gcmMessage);
+            } 
+        };
+
+         PnMessage message = new PnMessage(pb, CHANNEL, publishCallback , gcmMessage);
+
 
           //message.put("b");
 
@@ -238,10 +248,10 @@ public class GcmIntentService extends IntentService {
         }
     };
 
-    private void unregister() {
-        new AsyncTask() {
+    private void unregister()  {
+        AsyncTask<String, Void, Object> opTask = new AsyncTask<String, Void, Object>(){
             @Override
-            protected Object doInBackground(Object[] params) {
+            protected Object doInBackground(String... params) {
                 try {
                     if (gcm == null) {
                         gcm = GoogleCloudMessaging.getInstance(context);
@@ -271,5 +281,8 @@ public class GcmIntentService extends IntentService {
         editor.remove(PROPERTY_REG_ID);
         editor.apply();
     }
+}
+
+
 
 
