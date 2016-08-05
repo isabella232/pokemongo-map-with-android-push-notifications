@@ -1,3 +1,5 @@
+//this file is for a separate program that uses PubNub's project EON to display realtime Muni buses on a map. It gets the location from XML NextBus file
+
 var GtfsRealtimeBindings = require('gtfs-realtime-bindings');
 var request = require('request');
 
@@ -71,7 +73,6 @@ $(document).ready(function () {
                     else {
                         longArr[index1][index] = {'lon': -122.399267 };
                     }
-                    //console.log(i, totalStops[i].lat, totalStops[i].lon);
                     console.log(index1, latArr[index1][0].lat);
                     console.log(index1, longArr[index1][0].lon);
                 }); //each
