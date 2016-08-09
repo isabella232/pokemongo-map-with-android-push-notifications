@@ -38,10 +38,6 @@ import android.support.v4.media.session.MediaControllerCompat.Callback;
 
 public class GcmIntentService extends IntentService {
 
-//    private class asyncTaskClass extends GcmIntentService {
-//
-//    }
-
     String regId = "pikachu";
 //    String SENDER_ID = "209687934533";
 //    String maybe_sender_id = "AIzaSyCGbXUSDAyPeow9QR7JJHNGvp6frpWoy3M";
