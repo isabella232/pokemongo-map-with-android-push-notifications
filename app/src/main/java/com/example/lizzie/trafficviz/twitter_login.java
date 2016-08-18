@@ -1,9 +1,10 @@
 package com.example.lizzie.trafficviz;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.twitter.sdk.android.core.Result;
@@ -25,14 +26,14 @@ public class twitter_login extends Activity {
     private static final String twitterKey = "kdxvwh1nDAUZsPyaiuH70QLQr";
     private static final String twitterSecret = "4YYA7BPcH5DDw0bFmTdWqcs9gjDjhnsJfPTMjvhnmpCNDVpbMw";
     TwitterSession sesh;
-
+    Button nextButton;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.twitter_login);
 
         TwitterAuthConfig authConfig = new TwitterAuthConfig(twitterKey, twitterSecret);
-        Fabric.with(this, new TwitterCore(authConfig));
+        Fabric.with(this, new TwitterCore(authConfig), new TwitterCore(authConfig));
         loginButton = (TwitterLoginButton) findViewById(R.id.login_button);
         loginButton.setCallback(new Callback<TwitterSession>() {
             @Override
@@ -57,6 +58,14 @@ public class twitter_login extends Activity {
                 Log.d("TwitterKit", "Login with Twitter failure", exception);
             }
         });
+        nextButton = (Button) findViewById(R.id.screenTransition);
+        nextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent moveIntent = new Intent(getApplicationContext(), MainActivity.class);
+                startActivity(moveIntent);
+            }
+        });
     }
 
     @Override
@@ -66,6 +75,5 @@ public class twitter_login extends Activity {
         // Activity that it triggered.
         loginButton.onActivityResult(requestCode, resultCode, data);
     }
-
 
 }

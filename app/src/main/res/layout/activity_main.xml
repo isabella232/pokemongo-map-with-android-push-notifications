@@ -10,4 +10,14 @@
         android:layout_height="fill_parent"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true" />
+    <Button
+        android:id="@+id/screenTransition2"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="500dp"
+        android:textColor="#ffffff"
+        android:background="#ff0000"
+        android:layout_centerHorizontal="true"
+        android:textStyle="italic"
+        android:text="Go back!"/>
 </RelativeLayout>

@@ -1,10 +1,17 @@
 package com.example.lizzie.trafficviz;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.Button;
 
+
+import com.google.android.gms.common.api.Scope;
+import com.uber.sdk.android.core.UberSdk;
+import com.uber.sdk.rides.client.SessionConfiguration;
 
 import java.util.Arrays;
 
@@ -16,6 +23,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Button backButton;
 
         webView = (WebView) findViewById(R.id.webView1);
         webView.setInitialScale(1);
@@ -28,6 +36,14 @@ public class MainActivity extends Activity {
 
         webView.setWebViewClient(new WebViewClient());
         webView.loadUrl("file:///android_asset/eon.html");
+        backButton = (Button) findViewById(R.id.screenTransition2);
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent moveIntent2 = new Intent(getApplicationContext(), twitter_login.class);
+                startActivity(moveIntent2);
+            }
+        });
     }
 
     private class WebViewClient extends android.webkit.WebViewClient {
@@ -36,10 +52,4 @@ public class MainActivity extends Activity {
             return super.shouldOverrideUrlLoading(view, url);
         }
     }
-//    SessionConfiguration config = new SessionConfiguration.Builder()
-//            .setClientId("fE9Sab2S8kEwyCYYF8Bdw7yXPF1NTx1g")
-//            .setEnvironment(SessionConfiguration.Environment.SANDBOX)
-//            .setScopes(Arrays.asList(Scope.PROFILE, Scope.RIDE_WIDGETS))
-//            .build();
-
 }
