@@ -38,32 +38,20 @@ public class twitter_login extends Activity {
         loginButton.setCallback(new Callback<TwitterSession>() {
             @Override
             public void success(Result<TwitterSession> result) {
-//                if(!Fabric.isInitialized()) {
-//                    final TwitterAuthConfig authConfig = new TwitterAuthConfig("0sJzrc2WRIpf7IngQFBdrmKQJ","CKJSqTMZhhyBgWVeUrwNdUMExdQMfghFGG2LTL7b6tgP8lQobv" );
-//                    Fabric.with(getActivity(), new TwitterCore(authConfig));
-//
-//                }
-
-
-                // The TwitterSession is also available through:
                 //Twitter.getInstance().core.getSessionManager().getActiveSession();
                 sesh = result.data;
-//                // TODO: Remove toast and use the TwitterSession's userID
-//                // with your app's user model
                 String msg = "@" + sesh.getUserName() + " logged in! (#" + sesh.getUserId() + ")";
-                Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+                //Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+
+                Intent dataToPass = new Intent(getApplicationContext(), MainActivity.class);
+                dataToPass.putExtra("username", msg);
+                startActivity(dataToPass);
+                Intent moveIntent = new Intent(getApplicationContext(), MainActivity.class);
+                startActivity(moveIntent);
             }
             @Override
             public void failure(TwitterException exception) {
                 Log.d("TwitterKit", "Login with Twitter failure", exception);
-            }
-        });
-        nextButton = (Button) findViewById(R.id.screenTransition);
-        nextButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent moveIntent = new Intent(getApplicationContext(), MainActivity.class);
-                startActivity(moveIntent);
             }
         });
     }

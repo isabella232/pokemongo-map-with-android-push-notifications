@@ -10,14 +10,21 @@
         android:layout_height="fill_parent"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true" />
-    <Button
-        android:id="@+id/screenTransition2"
+    <com.uber.sdk.android.rides.RideRequestButton
+        android:id="@+id/uber_req_button"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:layout_marginTop="500dp"
+        android:layout_marginTop="300dp"
+        android:layout_centerHorizontal="true" />
+    <Button
+        android:id="@+id/compTweetButt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="400dp"
+        android:text="Tweet"
         android:textColor="#ffffff"
-        android:background="#ff0000"
-        android:layout_centerHorizontal="true"
-        android:textStyle="italic"
-        android:text="Go back!"/>
+        android:background="#00aced"
+        android:onClick="onClickListener"
+        android:layout_centerHorizontal="true"/>
+    <!--twitter blue -->
 </RelativeLayout>

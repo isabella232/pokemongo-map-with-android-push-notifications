@@ -1,6 +1,7 @@
 buildscript {
     repositories {
         maven { url 'https://maven.fabric.io/public' }
+        mavenLocal(); //uber android
     }
 
     dependencies {
@@ -25,6 +26,9 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
+        buildConfigField "String", "CLIENT_ID", "\"${loadSecret("UBER_CLIENT_ID")}\""
+        buildConfigField "String", "REDIRECT_URI", "\"${loadSecret("UBER_REDIRECT_URI")}\"" //Add your redirect uri to gradle.properties
+        buildConfigField "String", "SERVER_TOKEN", "\"${loadSecret("UBER_SERVER_TOKEN")}\"" //Add your server token to gradle.properties
         multiDexEnabled true
     }
     buildTypes {
@@ -36,9 +40,6 @@ android {
             debuggable true
         }
     }
-//    sourceSets {
-//        main.java.srcDirs += 'src/main/'
-//    }
 }
 
 dependencies {
@@ -54,4 +55,11 @@ dependencies {
     compile('com.twitter.sdk.android:twitter-core:2.0.0@aar') {
         transitive = true;
     }
+    compile('com.twitter.sdk.android:tweet-composer:2.0.0@aar') {
+        transitive = true;
+    }
+}
+
+def loadSecret(String name) {
+    return hasProperty(name) ? getProperty(name) : "MISSING"
 }

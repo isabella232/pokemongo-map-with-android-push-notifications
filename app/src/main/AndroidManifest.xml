@@ -9,8 +9,7 @@
         <activity
             android:name=".twitter_login"
             android:allowBackup="true"
-            android:icon="@mipmap/ic_launcher"
-            android:theme="@android:style/Theme.Black" >
+            android:icon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />ctivia
