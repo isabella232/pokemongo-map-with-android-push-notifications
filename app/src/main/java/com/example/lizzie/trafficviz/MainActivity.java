@@ -23,21 +23,13 @@ import com.uber.sdk.android.core.auth.AccessTokenManager;
 import com.uber.sdk.android.core.auth.AuthenticationError;
 import com.uber.sdk.android.rides.RideParameters;
 import com.uber.sdk.android.rides.RideRequestActivity;
-import com.uber.sdk.android.rides.RideRequestActivityBehavior;
 import com.uber.sdk.android.rides.RideRequestButton;
 import com.uber.sdk.android.rides.RideRequestButtonCallback;
 import com.uber.sdk.android.rides.RideRequestViewError;
-import com.uber.sdk.core.auth.AccessToken;
-import com.uber.sdk.rides.client.ServerTokenSession;
-import com.uber.sdk.rides.client.SessionConfiguration;
-import com.uber.sdk.rides.client.SessionConfiguration.Builder;
 import com.uber.sdk.rides.client.error.ApiError;
-import static com.uber.sdk.android.core.utils.Preconditions.checkNotNull;
-import static com.uber.sdk.android.core.utils.Preconditions.checkState;
-import com.uber.sdk.android.core.UberSdk;
 import com.uber.sdk.rides.client.SessionConfiguration;
-
-import java.util.Arrays;
+import com.uber.sdk.rides.client.ServerTokenSession;
+import com.uber.sdk.android.rides.RideRequestActivityBehavior;
 
 public class MainActivity extends Activity implements RideRequestButtonCallback {
     private static final String dropoffAddress = "725 Folsom, San Francisco";
@@ -57,6 +49,8 @@ public class MainActivity extends Activity implements RideRequestButtonCallback 
     private static final String redirectUri = BuildConfig.REDIRECT_URI;
     private static final String serverToken = BuildConfig.SERVER_TOKEN;
 
+    private static final int widgetRequestCode = 2468;
+
     private RideRequestButton rideReqButton;
     private static final String twitterKey = "kdxvwh1nDAUZsPyaiuH70QLQr";
     private static final String twitterSecret = "4YYA7BPcH5DDw0bFmTdWqcs9gjDjhnsJfPTMjvhnmpCNDVpbMw";
@@ -75,13 +69,12 @@ public class MainActivity extends Activity implements RideRequestButtonCallback 
         }
 
         config = new SessionConfiguration
-                //.setRedirectUri(r)
         .Builder().setRedirectUri(redirectUri)
                 .setClientId(clientId)
                 .setServerToken(serverToken)
                 .build();
 
-        //validateConfiguration(config);
+        //validateConfiguration(config);N
         ServerTokenSession sesh = new ServerTokenSession(config);
 
         RideParameters rideParams = new RideParameters.Builder()
@@ -89,16 +82,22 @@ public class MainActivity extends Activity implements RideRequestButtonCallback 
                 .setDropoffLocation(dropoffLat, dropoffLong, dropoffAka, dropoffAddress)
                 .build();
 
-        rideReqButton = (RideRequestButton) findViewById(R.id.uber_req_button);
-        rideReqButton.setRideParameters(rideParams);
-        rideReqButton.setSession(sesh);
-        rideReqButton.setCallback(this);
-        rideReqButton.loadRideInformation();
-
         RideParameters rideParametersCheapestProduct = new RideParameters.Builder()
                 .setPickupLocation(pickupLat, pickupLong, pickupAka, pickupAddress)
                 .setDropoffLocation(dropoffLat, dropoffLong, dropoffAka, dropoffAddress)
                 .build();
+
+        rideReqButton = (RideRequestButton) findViewById(R.id.uber_req_button);
+        rideReqButton.setRideParameters(rideParametersCheapestProduct);
+        RideRequestActivityBehavior rideRequestActivityBehavior = new RideRequestActivityBehavior(this,
+                widgetRequestCode, config);
+        //rideRequestActivityBehavior.setRequestBehavior(rideRequestActivityBehavior);
+        //rideReqButton.setRideParameters(rideParams);
+        rideReqButton.setSession(sesh);
+        rideReqButton.setCallback(this);
+        rideReqButton.loadRideInformation();
+
+
 
         webView = (WebView) findViewById(R.id.webView1);
         webView.setInitialScale(1);
@@ -112,15 +111,21 @@ public class MainActivity extends Activity implements RideRequestButtonCallback 
         webView.setWebViewClient(new WebViewClient());
         webView.loadUrl("file:///android_asset/eon.html");
 
+        //Fabric
+        TwitterSession twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
+        if(twitterSession!=null)
+        {
+            //getTwitterData(twitterSession); //Custom function in which am fetching the user's profile data
+            Toast.makeText(getApplicationContext(), "Logged in", Toast.LENGTH_LONG).show();
+            composeTweetButton = (Button) findViewById(R.id.compTweetButt);
+            composeTweetButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    composeTweet();
+                }
+            });
+        }
         //compose tweet button clicked
-        composeTweetButton = (Button) findViewById(R.id.compTweetButt);
-        composeTweetButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                composeTweet();
-            }
-        });
-
     }
 
     @Override
@@ -150,7 +155,7 @@ public class MainActivity extends Activity implements RideRequestButtonCallback 
         TwitterAuthConfig authConfig = new TwitterAuthConfig(twitterKey, twitterSecret);
         Fabric.with(this, new TwitterCore(authConfig), new TweetComposer());
         TweetComposer.Builder tweetBuilder = new TweetComposer.Builder(this).
-                text("Checking Muni buses with PubNub's EON.js on my Android phone. May call an Uber, though");
+                text("Checking @sfmta Muni buses w/ @PubNub EON.js on my Android phone. May call an @Uber, though");
         tweetBuilder.show();
     }
 

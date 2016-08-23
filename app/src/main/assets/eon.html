@@ -42,7 +42,6 @@ var longArr = [];
 var sitesToCheck = [];
 var siteToCheck1, siteToCheck2, siteToCheck3;
 var pb= PUBNUB.init({
-    //ssl: true,
     publish_key: pub_key,
     subscribe_key: sub_key
 });
@@ -99,9 +98,7 @@ $(document).ready(function () {
         channel: chan,
         rotate: true,
         message: function (data) {
-            //for(var i = 0; i < 3; i++) {
             map.setView(data[1].latlng, 13); //13 = zoom, set location
-            //}
         }
     });
 });

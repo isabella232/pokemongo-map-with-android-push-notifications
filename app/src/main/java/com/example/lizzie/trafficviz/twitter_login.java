@@ -14,6 +14,8 @@ import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 import com.twitter.sdk.android.core.Callback;
+import com.uber.sdk.android.core.auth.LoginActivity;
+
 import io.fabric.sdk.android.Fabric;
 
 
@@ -38,16 +40,15 @@ public class twitter_login extends Activity {
         loginButton.setCallback(new Callback<TwitterSession>() {
             @Override
             public void success(Result<TwitterSession> result) {
-                //Twitter.getInstance().core.getSessionManager().getActiveSession();
                 sesh = result.data;
-                String msg = "@" + sesh.getUserName() + " logged in! (#" + sesh.getUserId() + ")";
-                //Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+                startThemeChooser();
+                //String msg = "@" + sesh.getUserName() + " logged in! (#" + sesh.getUserId() + ")";
 
-                Intent dataToPass = new Intent(getApplicationContext(), MainActivity.class);
-                dataToPass.putExtra("username", msg);
-                startActivity(dataToPass);
-                Intent moveIntent = new Intent(getApplicationContext(), MainActivity.class);
-                startActivity(moveIntent);
+//                Intent dataToPass = new Intent(getApplicationContext(), MainActivity.class);
+//                dataToPass.putExtra("username", msg);
+//                startActivity(dataToPass);
+//                Intent moveIntent = new Intent(getApplicationContext(), MainActivity.class);
+//                startActivity(moveIntent);
             }
             @Override
             public void failure(TwitterException exception) {
@@ -55,12 +56,16 @@ public class twitter_login extends Activity {
             }
         });
     }
+    private void startThemeChooser() {
+        final Intent themeChooserIntent = new Intent(twitter_login.this,
+                MainActivity.class);
+        startActivity(themeChooserIntent);
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        // Make sure that the loginButton hears the result from any
-        // Activity that it triggered.
+        // Ensure the loginButton hears the result from any Activity it triggered.
         loginButton.onActivityResult(requestCode, resultCode, data);
     }
 
