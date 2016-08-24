@@ -1,18 +1,26 @@
 package com.example.lizzie.trafficviz;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Display;
 import android.view.View;
+import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.Toast;
 
 
 import io.fabric.sdk.android.Fabric;
 
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.twitter.sdk.android.core.TwitterSession;
 import com.twitter.sdk.android.tweetcomposer.ComposerActivity;
 import com.twitter.sdk.android.tweetcomposer.TweetComposer;
@@ -57,6 +65,12 @@ public class MainActivity extends Activity implements RideRequestButtonCallback 
     private Button composeTweetButton;
 
     WebView webView;
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,12 +78,12 @@ public class MainActivity extends Activity implements RideRequestButtonCallback 
 
         //get fabric data from intent
         Bundle extras = getIntent().getExtras();
-        if(extras != null) {
+        if (extras != null) {
             String val = extras.getString("key");
         }
 
         config = new SessionConfiguration
-        .Builder().setRedirectUri(redirectUri)
+                .Builder().setRedirectUri(redirectUri)
                 .setClientId(clientId)
                 .setServerToken(serverToken)
                 .build();
@@ -98,7 +112,6 @@ public class MainActivity extends Activity implements RideRequestButtonCallback 
         rideReqButton.loadRideInformation();
 
 
-
         webView = (WebView) findViewById(R.id.webView1);
         webView.setInitialScale(1);
         WebSettings webSetting = webView.getSettings();
@@ -107,14 +120,17 @@ public class MainActivity extends Activity implements RideRequestButtonCallback 
         webSetting.setUseWideViewPort(true);
         webSetting.setLoadWithOverviewMode(true);
         webView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
+        //webView.setPadding(0, 0, 0, 0);
+        //webView.setInitialScale(getScale());
+        webSetting.setUseWideViewPort(true);
+        webSetting.setLoadWithOverviewMode(true);
 
         webView.setWebViewClient(new WebViewClient());
         webView.loadUrl("file:///android_asset/eon.html");
 
         //Fabric
         TwitterSession twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
-        if(twitterSession!=null)
-        {
+        if (twitterSession != null) {
             //getTwitterData(twitterSession); //Custom function in which am fetching the user's profile data
             Toast.makeText(getApplicationContext(), "Logged in", Toast.LENGTH_LONG).show();
             composeTweetButton = (Button) findViewById(R.id.compTweetButt);
@@ -126,16 +142,21 @@ public class MainActivity extends Activity implements RideRequestButtonCallback 
             });
         }
         //compose tweet button clicked
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     @Override
     public void onRideInformationLoaded() {
         Toast.makeText(this, "estimates have been refre$hed", Toast.LENGTH_LONG).show();
     }
+
     @Override
     public void onError(ApiError apiErr) {
         Toast.makeText(this, apiErr.getClientErrors().get(0).getTitle(), Toast.LENGTH_LONG).show();
     }
+
     @Override
     public void onError(Throwable throwable) {
         Log.e("eon yaaa", "error obtaining metadata", throwable);
@@ -157,6 +178,54 @@ public class MainActivity extends Activity implements RideRequestButtonCallback 
         TweetComposer.Builder tweetBuilder = new TweetComposer.Builder(this).
                 text("Checking @sfmta Muni buses w/ @PubNub EON.js on my Android phone. May call an @Uber, though");
         tweetBuilder.show();
+    }
+
+    private int getScale() {
+        Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+        int width = display.getWidth();
+        Double val = new Double(width) / new Double(360);
+        val = val * 100d;
+        return val.intValue();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "Main Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app URL is correct.
+                Uri.parse("android-app://com.example.lizzie.trafficviz/http/host/path")
+        );
+        AppIndex.AppIndexApi.start(client, viewAction);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "Main Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app URL is correct.
+                Uri.parse("android-app://com.example.lizzie.trafficviz/http/host/path")
+        );
+        AppIndex.AppIndexApi.end(client, viewAction);
+        client.disconnect();
     }
 
     private class WebViewClient extends android.webkit.WebViewClient {

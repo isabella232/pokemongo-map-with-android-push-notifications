@@ -26,7 +26,11 @@
         <uses-permission android:name="android.permission.INTERNET"></uses-permission>
         <meta-data
             android:name="io.fabric.ApiKey"
-            android:value="e05fc5b4b2b85f6cbd867cbb67e1a68cf878cd7f"/>
+            android:value="e05fc5b4b2b85f6cbd867cbb67e1a68cf878cd7f"/><!-- ATTENTION: This was auto-generated to add Google Play services to your project for
+     App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information. -->
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
     </application>
     <uses-permission android:name="android.permission.INTERNET" />
 </manifest>
